@@ -3,3 +3,4 @@ __pycache__/
 # 探測輸出含聊天室名稱，不進版控
 probe_*.txt
 probe_ocr/
+out/
