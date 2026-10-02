@@ -9,6 +9,7 @@ import os
 import time
 
 from src.line_window import LineNotFound, LineWindow, StopRequested
+from src.stop_key import watch_stop_key
 
 OUT_DIR = "out"
 
@@ -18,7 +19,8 @@ def main():
     try:
         lw = LineWindow()
         start = time.time()
-        chats = lw.read_all(on_new=lambda c: print(f"  讀到: {c.name or '(無法辨識)'}"))
+        with watch_stop_key():
+            chats = lw.read_all(on_new=lambda c: print(f"  讀到: {c.name or '(無法辨識)'}"))
     except (LineNotFound, StopRequested) as e:
         print(e)
         return 1

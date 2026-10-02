@@ -14,6 +14,7 @@ from PIL import Image, ImageChops
 from pywinauto import Desktop, mouse
 
 from . import ocr
+from .stop_key import StopRequested, check_stop  # noqa: F401（StopRequested 供呼叫端使用）
 
 LINE_EXE = "line.exe"
 MAIN_CLASS = "AllInOneWindow"
@@ -24,7 +25,6 @@ AVATAR_BOX = (18, 15, 78, 75)
 SCROLL_NOTCHES = 2            # 每次往下捲的滾輪格數，需小於一個畫面高度
 SCROLL_WAIT = 0.4
 MAX_SCROLLS = 1000
-VK_ESCAPE = 0x1B
 
 _user32 = ctypes.windll.user32
 _kernel32 = ctypes.windll.kernel32
@@ -37,16 +37,6 @@ _kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
 
 class LineNotFound(Exception):
     pass
-
-
-class StopRequested(Exception):
-    pass
-
-
-def check_stop():
-    """使用者按下 Esc 就中止。"""
-    if _user32.GetAsyncKeyState(VK_ESCAPE) & 0x8001:
-        raise StopRequested("使用者按下 Esc 中止")
 
 
 def _process_path(pid):
@@ -161,7 +151,6 @@ class LineWindow:
 
     def read_all(self, on_new=None):
         """從頂端捲到底，回傳所有聊天室（依列表順序、已去重、已 OCR）。"""
-        check_stop()  # 清掉先前殘留的 Esc 狀態
         self.warnings.clear()
         self.focus()
         self.scroll_to_top()
