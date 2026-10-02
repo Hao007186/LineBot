@@ -16,7 +16,7 @@
 
 ## 技術選擇
 - 語言：Python 3（Windows）
-- 自動化：`pywinauto`（UIA backend）優先；若 LINE 自繪介面抓不到元素，改用 `pyautogui` + `opencv` 範本比對定位 + Windows OCR（`winsdk`，需繁中語言包）讀聊天室名稱
+- 自動化：`pywinauto`（UIA backend）定位元素 + Windows OCR（`winrt-Windows.Media.Ocr`）讀文字 + `Pillow` 截圖與影像比對（詳見「可行性探測結果」）
 - GUI：`tkinter`（內建，免額外安裝）
 - 打包（選用）：`pyinstaller` 產生單一 exe
 
@@ -36,6 +36,24 @@
    - 可設定每筆間隔
    - 記錄 log
    - 可選「保留清單」（白名單）模式：刪除全部，除了勾選者
+
+## 可行性探測結果（2026-10-02，`probe.py`、`probe_text.py`）
+結論：**混合路線**——UIA 負責定位，OCR 負責讀文字，影像比對負責辨識身份。
+
+- LINE 桌面版為 Qt 自製元件（`Lc*` 類別），UIA 讀得到結構與座標，但**所有元素 name 皆為空**；legacy / Value / Text pattern 也取不到文字。
+- 主視窗：`Window` class=`AllInOneWindow`。
+- 聊天列表：`List` class=`LcListView`（位於 `MainChatPanel` 下），子項 `ListItem` 每列高 90px，**只回報畫面上可見的項目**（需捲動讀取）。
+  - 只處理完整落在 `LcListView` 範圍內的項目；列表下方的 `AdvertisementPanel` 廣告會蓋住超出範圍的列。
+  - 右下角浮動按鈕（`LcButton`，新增聊天）會遮住部分列的右側，名稱區不受影響。
+- 右鍵選單：獨立頂層視窗 class=`LcContextMenu`，項目為 `LcContextMenuItem`。目前順序：釘選聊天室／隱藏／**自聊天列表中刪除**／（分隔線）關閉提醒。**以 OCR 找「刪除」字樣定位，不寫死索引。**
+- 搜尋框：`Edit` class=`LcTextField`，位於列表上方。
+- 確認對話框：尚未探測（需實際刪除時觀察）。
+
+OCR（Windows 內建 `Windows.Media.Ocr`，zh-Hant-TW，套件改用 `winrt-*` 取代已停止維護的 `winsdk`）：
+- 整列截圖辨識會漏掉短名稱；應**只截名稱區**（列內約 x 95–290、y 15–45），放大 3–4 倍並加 40–60px 白邊，依序嘗試多種預處理取第一個有結果者。
+- 選單項目以「放大 3 倍 + 白邊」辨識全部正確。
+- OCR 有錯字（如 騎→骑、-→一），**名稱文字僅供顯示與搜尋；刪除時以名稱區截圖做影像比對確認身份**。
+- 截圖前須呼叫 `SetProcessDpiAwareness(2)`，讓截圖座標與 UIA 座標一致。
 
 ## 驗證方式
 - 用測試帳號或少量不重要的聊天室先跑：勾 2–3 筆 → 執行 → 確認 LINE 中已消失、未勾選者保留。

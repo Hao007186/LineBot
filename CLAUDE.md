@@ -1,0 +1,1 @@
+每次開始新對話後先讀取Specification.md
