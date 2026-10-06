@@ -66,11 +66,9 @@
 - 打包後 log 寫到 exe 旁的 `out\logs\`（`gui.APP_DIR`），`build/`、`dist/` 不進版控。
 - `LineChatTool.exe --check`：不操作 LINE 的自我檢查（UIA、Windows OCR、tkinter），結果寫入 exe 旁 `check.txt`；已通過。
 
-## 下一步
+## 專案狀態
 
-1. **使用者實測 `main.py`**（`.venv\Scripts\python.exe main.py`）：讀取列表 → 勾 2–3 個不重要的聊天室 → 刪除。
-2. 驗證：GUI 不擋住 LINE、中途停止（Esc 與按鈕）、LINE 視窗被最小化、需捲動才看得到的聊天室、白名單模式、大量刪除（數十筆）的穩定性與速度。
-3. （選用）`pyinstaller` 打包成單一 exe。
+**2026-10-06 專案完成**（使用者決定）。未另外實測的項目：中途停止（Esc／按鈕）、白名單模式、大量（數十筆）處理的穩定性。
 
 ## 使用注意
 
