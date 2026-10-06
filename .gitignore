@@ -4,3 +4,6 @@ __pycache__/
 probe_*.txt
 probe_ocr/
 out/
+# PyInstaller 產物（dist/ 內的 out/logs 也含聊天室名稱）
+build/
+dist/

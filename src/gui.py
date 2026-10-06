@@ -7,6 +7,7 @@ log 寫入 out/logs/（含聊天室名稱，不進版控）。
 import logging
 import os
 import queue
+import sys
 import threading
 import time
 import tkinter as tk
@@ -22,7 +23,10 @@ from .actions import DELETE, HIDE, ActionFailed, apply
 from .line_window import LineNotFound, LineWindow
 from .stop_key import StopRequested, check_stop, request_stop, watch_stop_key
 
-LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "out", "logs")
+# 打包成 exe 時 __file__ 在暫存資料夾（結束即刪除），log 改寫到 exe 旁邊
+APP_DIR = (os.path.dirname(sys.executable) if getattr(sys, "frozen", False)
+           else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+LOG_DIR = os.path.join(APP_DIR, "out", "logs")
 TITLE = "LINE 批次刪除 / 隱藏聊天室"
 ACTIONS = {"delete": DELETE, "hide": HIDE}
 UNREAD = "(無法辨識)"

@@ -12,7 +12,7 @@
 | 1. 讀取聊天列表（捲動、去重、OCR） | ✅ 完成 | `src/line_window.py`、`src/ocr.py`、`try_read_list.py` | `e9a303d` 捲動功能測試 |
 | 2. 刪除單一聊天室 + Esc 中止 | ✅ 完成（命令列測試版） | `src/actions.py`、`src/stop_key.py`、`probe_confirm.py`、`try_delete.py` | `afb1eab` 新增刪除功能(未完成) |
 | 3. GUI（刪除 + 隱藏） | ✅ 完成（實測成功） | `src/gui.py`、`src/actions.py` | 新增GUI的刪除與隱藏功能 |
-| 4. 進入點與打包 | 🟨 `main.py` 完成；打包未做 | `main.py`（選用 `pyinstaller`） | |
+| 4. 進入點與打包 | ✅ 完成（桌面捷徑實測成功） | `main.py`、`LineChatTool.spec`、`build.bat`、`assets/icon.ico` | 打包成EXE檔 |
 
 ## 已實測結果（真實帳號）
 
@@ -57,6 +57,14 @@
 
 - LINE 縮到系統匣時 Qt 會銷毀主視窗（只剩系統匣用的隱藏視窗），無法用 ShowWindow 叫回。
 - `LineWindow` 找不到主視窗時執行 `LineLauncher.exe`（優先用執行中 LINE 旁的，其次 `%LOCALAPPDATA%\LINE\bin\`），LINE 單一執行個體會叫出原視窗；最多等 30 秒。**實測成功**。
+
+## 打包（2026-10-06）
+
+- PyInstaller 6.22（Python 3.14）單一 exe、無主控台：`dist\LineChatTool.exe`（約 22 MB），圖示 `assets/icon.ico`。
+- 重新打包：雙擊 `build.bat`（= `pyinstaller --noconfirm LineChatTool.spec`），打包前先關閉執行中的 exe。
+- 桌面捷徑「LINE 批次刪除隱藏」指向 `dist\LineChatTool.exe`。
+- 打包後 log 寫到 exe 旁的 `out\logs\`（`gui.APP_DIR`），`build/`、`dist/` 不進版控。
+- `LineChatTool.exe --check`：不操作 LINE 的自我檢查（UIA、Windows OCR、tkinter），結果寫入 exe 旁 `check.txt`；已通過。
 
 ## 下一步
 
