@@ -63,10 +63,16 @@ def text_mask(img):
     return ImageOps.grayscale(img).point(lambda p: 255 if p < TEXT_THRESHOLD else 0)
 
 
-def same_mask(a, b):
-    """比對兩個文字遮罩，容許最多 MAX_SHIFT px 的位移（捲動後 UIA 座標會有 1px 捨入誤差）。"""
-    if a.size != b.size:
+def same_mask(a, b, tail=0):
+    """比對兩個文字遮罩，容許最多 MAX_SHIFT px 的位移（捲動後 UIA 座標會有 1px 捨入誤差）。
+
+    LINE 視窗寬度改變時名稱區寬度也會變：只比對兩者共同的寬度，並忽略右端 tail px
+    （名稱過長時會在那裡被截成「…」，位置隨寬度而不同）。
+    """
+    width = min(a.width, b.width) - tail
+    if a.height != b.height or width <= 4 * MAX_SHIFT:
         return False
+    a, b = a.crop((0, 0, width, a.height)), b.crop((0, 0, width, b.height))
     s = MAX_SHIFT
     inner = a.crop((s, s, a.width - s, a.height - s))
     pixels = inner.width * inner.height

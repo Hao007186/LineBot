@@ -21,8 +21,10 @@ MAIN_CLASS = "AllInOneWindow"
 LIST_CLASS = "LcListView"
 BASE_ROW_HEIGHT = 90          # 100% 縮放時的列高，用來換算下列區域
 NAME_BOX = (95, 15, 90, 45)   # 名稱區：左, 上, 距右邊界, 下
+NAME_TAIL = 25                # 比對名稱時忽略名稱區右端的寬度（截斷成「…」的位置）
 AVATAR_BOX = (18, 15, 78, 75)
-SCROLL_NOTCHES = 2            # 每次往下捲的滾輪格數，需小於一個畫面高度
+SCROLL_NOTCHES = 2            # 每次往下捲的滾輪格數；捲過頭（與上一畫面沒有重疊）時改為 1
+MIN_VISIBLE_ROWS = 3
 SCROLL_WAIT = 0.4
 MAX_SCROLLS = 1000
 
@@ -67,7 +69,9 @@ class Chat:
 
     def same_as(self, other):
         """以頭像 + 名稱文字遮罩判斷是否為同一聊天室（不依賴 OCR 文字）。頭像比對較快，先做。"""
-        return ocr.same_avatar(self.avatar, other.avatar) and ocr.same_mask(self.name_mask, other.name_mask)
+        tail = round(NAME_TAIL * self.row_img.height / BASE_ROW_HEIGHT)
+        return (ocr.same_avatar(self.avatar, other.avatar)
+                and ocr.same_mask(self.name_mask, other.name_mask, tail))
 
 
 @dataclass
@@ -85,7 +89,7 @@ class LineWindow:
             path = _process_path(w.element_info.process_id)
             if os.path.basename(path).lower() == LINE_EXE:
                 return w
-        raise LineNotFound("找不到 LINE 主視窗，請確認 LINE 已開啟並登入")
+        raise LineNotFound("找不到 LINE 主視窗，請確認 LINE 已開啟並登入（若縮到系統匣，請先從系統匣打開 LINE 視窗）")
 
     def focus(self):
         hwnd = self.window.handle
@@ -155,10 +159,18 @@ class LineWindow:
         self.focus()
         self.scroll_to_top()
         chats, prev_visible = [], []
+        notches, max_visible = SCROLL_NOTCHES, 0
         for _ in range(MAX_SCROLLS):
             check_stop()
             visible = self.visible_chats()
+            max_visible = max(max_visible, len(visible))
             if prev_visible and not any(v.same_as(p) for v in visible for p in prev_visible):
+                if notches > 1:
+                    # 捲過頭：退回上一畫面，改用較小的捲動量重讀
+                    self.scroll(notches)
+                    notches = 1
+                    self.scroll(-notches)
+                    continue
                 self.warnings.append(f"第 {len(chats)} 筆附近捲動後與上一畫面沒有重疊，可能漏讀")
             for chat in visible:
                 # 重複項目通常在上一畫面，從最近讀到的開始比對
@@ -168,6 +180,8 @@ class LineWindow:
                     if on_new:
                         on_new(chat)
             prev_visible = visible
-            if not self.scroll(-SCROLL_NOTCHES):
+            if not self.scroll(-notches):
                 break
+        if max_visible < MIN_VISIBLE_ROWS < len(chats):
+            self.warnings.insert(0, f"LINE 視窗太矮，聊天列表一次只顯示 {max_visible} 列，建議把 LINE 視窗拉高")
         return chats

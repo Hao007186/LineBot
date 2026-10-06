@@ -45,7 +45,12 @@ class StopRequested(Exception):
 
 def check_stop():
     if _stop.is_set():
-        raise StopRequested("使用者按下 Esc 中止")
+        raise StopRequested("使用者要求中止")
+
+
+def request_stop():
+    """不經熱鍵直接要求中止（例如 GUI 的「停止」按鈕）。"""
+    _stop.set()
 
 
 def _run_hook(ready, state):

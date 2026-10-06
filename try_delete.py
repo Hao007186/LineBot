@@ -6,7 +6,7 @@
 """
 import time
 
-from src.actions import DeleteFailed, delete_chat
+from src.actions import ActionFailed, delete_chat
 from src.line_window import LineNotFound, LineWindow, StopRequested
 from src.stop_key import watch_stop_key
 
@@ -56,7 +56,7 @@ def main():
                     delete_chat(lw, chat)
                     done += 1
                     print(f"  ({n}/{len(targets)}) 已刪除: {label}")
-                except DeleteFailed as e:
+                except ActionFailed as e:
                     failed += 1
                     print(f"  ({n}/{len(targets)}) 跳過: {label}（{e}）")
                 time.sleep(DELAY)
